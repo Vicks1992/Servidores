@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Formulario de Jugador</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e5e5e5;
+        }
+
+        .contenedor {
+            width: 700px;
+            margin: 20px auto;
+            background: #b3b3cc;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        fieldset {
+            margin-bottom: 15px;
+        }
+
+        .boton {
+            padding: 10px 20px;
+            background: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .resultado {
+            width: 700px;
+            margin: 20px auto;
+            background: yellow;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .resultado img {
+            max-width: 250px;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<?php
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+    // Recoger datos del formulario
+
+    $nombre = htmlspecialchars(trim($_POST["nombre"]));
+    $alias = htmlspecialchars(trim($_POST["alias"]));
+    $edad = $_POST["edad"];
+
+    $armas = $_POST["armas"] ?? [];
+
+    $magia = $_POST["magia"] ?? "No";
+
+
+    // Variables para la imagen
+
+    $rutaImagen = "img/calavera.png";
+
+    $mensajeError = "";
+
+    $subidaCorrecta = false;
+
+
+    /*
+     * VALIDACIÓN DEL NOMBRE Y ALIAS
+     */
+
+    if ($nombre == "" || $alias == "") {
+
+        $mensajeError = "El nombre y el alias son obligatorios.";
+
+    }
+
+
+    /*
+     * COMPROBAR IMAGEN
+     */
+
+    if (isset($_FILES["imagen"]) && $_FILES["imagen"]["error"] != 4) {
+
+        // Tamaño máximo: 10 KB
+
+        $maxTam = 10000000;
+
+
+        if ($_FILES["imagen"]["size"] > $maxTam) {
+
+            $mensajeError = "Error: la imagen supera los 10 KB.";
+
+        } else {
+
+            // Tipos permitidos
+
+            $permitidos = [
+                "image/jpeg",
+                "image/png",
+                "image/gif",
+                "image/webp"
+            ];
+
+
+            if (in_array($_FILES["imagen"]["type"], $permitidos)) {
+
+                // Nombre nuevo para evitar problemas
+
+                $nombreArchivo = time() . "_" .
+                    basename($_FILES["imagen"]["name"]);
+
+
+                $destino = "uploads/" . $nombreArchivo;
+
+
+                // Guardar imagen
+
+                if (move_uploaded_file(
+                    $_FILES["imagen"]["tmp_name"],
+                    $destino
+                )) {
+
+                    $rutaImagen = $destino;
+
+                    $subidaCorrecta = true;
+
+                } else {
+
+                    $mensajeError = "Error al subir la imagen.";
+                }
+
+            } else {
+
+                $mensajeError = "Solo se permiten imágenes.";
+
+            }
+        }
+    }
+
+
+    /*
+     * MOSTRAR RESULTADO
+     */
+
+    echo "<div class='resultado'>";
+
+    echo "<h2>Datos del Jugador</h2>";
+
+
+    echo "<p><strong>Nombre:</strong> "
+        . $nombre
+        . "</p>";
+
+
+    echo "<p><strong>Alias:</strong> "
+        . $alias
+        . "</p>";
+
+
+    echo "<p><strong>Edad:</strong> "
+        . $edad
+        . "</p>";
+
+
+    echo "<p><strong>Armas seleccionadas:</strong> ";
+
+    if (count($armas) > 0) {
+
+        echo htmlspecialchars(
+            implode(", ", $armas)
+        );
+
+    } else {
+
+        echo "Ninguna";
+    }
+
+    echo "</p>";
+
+
+    echo "<p><strong>¿Practica artes mágicas?:</strong> "
+        . htmlspecialchars($magia)
+        . "</p>";
+
+
+    echo "<h3>Imagen subida:</h3>";
+
+
+    // Mostrar imagen
+
+    echo "<img src='$rutaImagen' alt='Imagen del jugador'>";
+
+
+    /*
+     * MOSTRAR ERROR
+     */
+
+    if ($mensajeError != "") {
+
+        echo "<p class='error'>"
+            . $mensajeError
+            . "</p>";
+
+    }
+
+
+    echo "</div>";
+
+
+} else {
+
+    /*
+     * PETICIÓN GET
+     * Mostrar formulario
+     */
+
+?>
+
+<div class="contenedor">
+
+    <h1>Formulario de Jugador</h1>
+
+    <form method="POST"
+          action="index.php"
+          enctype="multipart/form-data">
+
+
+        <!-- NOMBRE -->
+
+        <label>Nombre:</label>
+
+        <input type="text"
+               name="nombre"
+               required>
+
+
+        <!-- ALIAS -->
+
+        <label>Alias:</label>
+
+        <input type="text"
+               name="alias"
+               required>
+
+
+        <!-- EDAD -->
+
+        <label>Edad:</label>
+
+        <input type="number"
+               name="edad"
+               min="1"
+               required>
+
+
+        <!-- ARMAS -->
+
+        <fieldset>
+
+            <legend>
+                Armas a elegir (puedes elegir varias)
+            </legend>
+
+
+            <label>
+
+                <input type="checkbox"
+                       name="armas[]"
+                       value="Maza">
+
+                Maza
+
+            </label>
+
+            <br>
+
+
+            <label>
+
+                <input type="checkbox"
+                       name="armas[]"
+                       value="Antorcha">
+
+                Antorcha
+
+            </label>
+
+            <br>
+
+
+            <label>
+
+                <input type="checkbox"
+                       name="armas[]"
+                       value="Martillo">
+
+                Martillo
+
+            </label>
+
+            <br>
+
+
+            <label>
+
+                <input type="checkbox"
+                       name="armas[]"
+                       value="Látigo">
+
+                Látigo
+
+            </label>
+
+        </fieldset>
+
+
+        <!-- MAGIA -->
+
+        <fieldset>
+
+            <legend>
+                ¿Practica artes mágicas?
+            </legend>
+
+
+            <label>
+
+                <input type="radio"
+                       name="magia"
+                       value="Sí"
+                       checked>
+
+                Sí
+
+            </label>
+
+            <br>
+
+
+            <label>
+
+                <input type="radio"
+                       name="magia"
+                       value="No">
+
+                No
+
+            </label>
+
+        </fieldset>
+
+
+        <!-- IMAGEN -->
+
+        <label>Subir imagen:</label>
+
+        <input type="file"
+               name="imagen"
+               accept="image/*">
+
+
+        <br>
+        <br>
+
+
+        <!-- BOTONES -->
+
+        <input type="submit"
+               value="Enviar"
+               class="boton">
+
+
+        <input type="reset"
+               value="Borrar"
+               class="boton">
+
+    </form>
+
+</div>
+
+<?php
+
+}
+
+?>
+
+</body>
+
+</html>
