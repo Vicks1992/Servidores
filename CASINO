@@ -17,8 +17,6 @@ if (! isset($_SESSION['disponible'])) {
         $_SESSION['disponible'] = $_POST['cantidadini'];
         $disponible = $_SESSION['disponible'];
 
-        // No reiniciamos las visitas aquí
-
     } else {
 
         $visitas++;
